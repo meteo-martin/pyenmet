@@ -4,8 +4,7 @@ interpolation
 
 V0 - 26.02.2017
 
-TODO: 1.) Unstable Strafitication for Logprof Correction
-      2.) Interpolation for Ekman Layer
+TODO: 1.) Interpolation for Ekman Layer
 
 Dependencies: numpy
 """
@@ -18,16 +17,18 @@ def logprof(z,ustar,znot,L=np.inf,d=0):
     # IN: z (des. height) [m], ustar (friction velocity) [m/s],
     #     znot (roughness length) [m], d (displacement height) [m],
     #     L (Obhukov Length) [m]
-    a=0.5
-    A=1.0
-    B=2.0/3.0
-    C=5.0
-    D=0.35
     # Calculate Correction Functions
     if L==np.inf or L==-1.0*np.inf: # Neutral Case
         psi=0
     else:
         if L>0: # Stable Case
+            # Constants
+            a=0.5
+            A=1.0
+            B=2.0/3.0
+            C=5.0
+            D=0.35
+            # Correction
             if ((z/L)>0 and (z/L)<=0.5):
                 psi=-1.0*a*z/L
             elif ((z/L)>0.5 and (z/L)<=7):
@@ -35,9 +36,15 @@ def logprof(z,ustar,znot,L=np.inf,d=0):
             else:
                 psi=np.exp(-D*z/L)+(B*C/D)
         elif L<=0: # Unstable Case
-            psi=0
+            # Constants:
+            b=16
+            x=(1-(b*z/L))**0.25
+            x1=(2.0*np.log((1.0+x)/2.0))
+            x2=np.log((1.0+x**2.0)/2.0)
+            x3=2.0*np.arctan(x)
+            psi=x1+x2-x3+np.pi/2.0
     # Calculate Wind Speed Profile with Correction
-    uint=(ustar/KAPPA)*(np.ln(((z-d)/znot))-psi)
+    uint=(ustar/KAPPA)*(np.log(((z-d)/znot))-psi)
     return(uint)
 
 
